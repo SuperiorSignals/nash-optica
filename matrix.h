@@ -1,15 +1,13 @@
 #pragma once
-#include <iostream>
-#include <fstream>
-#include <cmath>
 #include <vector>
-#include <iomanip>
-#include <stdlib.h>
+#include "customlens.h"
 
-#define SAMPLE_NUMBER 128
+#define SAMPLE_NUMBER 1024
+#define DISPLAY_NUMBER 32
 #define PI 3.14159265359
 
-int matrix();
+CustomLens matrix();
+int matrixMenu(int key);
 double gaussian(double value, double mean, double stddev);
 double maxwell(double value, double alpha);
 void histogramSpecification(std::vector<double> &result, std::vector<double> &given, std::vector<double> &desired);

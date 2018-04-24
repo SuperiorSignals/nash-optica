@@ -1,8 +1,16 @@
 #include "matrix.h"
+#include <iostream>
+#include <fstream>
+#include <cmath>
+#include <vector>
+#include <iomanip>
+#include <cstdlib>
+#include "customlens.h"
 
-int matrix()
+CustomLens matrix()
 {
 	int i;
+	int menuSelection;
 	double temporary;
 	double indexOfRefraction;
 	double lensThickness;
@@ -12,6 +20,7 @@ int matrix()
 	std::vector<double> specifiedIntensity;
 	std::ofstream outputFile;
 	std::ifstream inputFile;
+	CustomLens output;
 	/*
 	inputFile.open("input.lns");
 
@@ -33,13 +42,92 @@ int matrix()
 	std::cout << "Angle" << "\t\t" << "Src. Intsy" << "\t" << "Spec. Intsy" << "\t" << "Lens Angle" << std::endl;
 	for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
 		lensAngle[i] *= PI / 2;
-		std::cout << angle[i] << "\t\t" << sourceIntensity[i] << "\t\t" << specifiedIntensity[i] << "\t\t" << lensAngle[i] << std::endl;
+		if (!(i % DISPLAY_NUMBER)) {
+			std::cout << angle[i] << "\t\t" << sourceIntensity[i] << "\t\t" << specifiedIntensity[i] << "\t\t" << lensAngle[i] << std::endl;
+		}
 	}
 	outputFile.open("optics_output_1.txt", std::ios::out | std::ios::trunc);
-
+	if (outputFile.is_open()) {
+		outputFile << std::fixed << std::setprecision(5);
+		for (i = 0; i < angle.size(); i++) {
+			outputFile << angle[i] << "\t\t" << sourceIntensity[i] << "\t\t" << specifiedIntensity[i] << "\t\t" << lensAngle[i] << std::endl;
+		}
+	} else {
+		std::cout << "ERROR: Unable to open file optics_output_1.txt" << std::endl;
+	}
 	outputFile.close();
-	//system("pause");
-	return 0;
+	for (i = 0; i < angle.size(); i++) {
+		lensAngle[i] = angle[i] - lensAngle[i];
+	}
+	std::cout << "Angle" << "\t\t" << "Src. Intsy" << "\t" << "Spec. Intsy" << "\t" << "Lens Angle" << std::endl;
+	for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
+		lensAngle[i] *= PI / 2;
+		if (!(i % SAMPLE_NUMBER)) {
+			std::cout << angle[i] << "\t\t" << sourceIntensity[i] << "\t\t" << specifiedIntensity[i] << "\t\t" << lensAngle[i] << std::endl;
+		}
+	}
+	output.setAngles(angle);
+	output.setLensAngles(lensAngle);
+
+	return output;
+}
+
+int matrixMenu(int key) {
+	int menuSelection;
+	
+	menuSelection = 1;
+	do {
+		switch (menuSelection) {
+		case 0:
+			key = 0;
+			break;
+		case 1:
+			std::cout << "Menu" << std::endl;
+			std::cout << "----------" << std::endl;
+			std::cout << "0. Exit" << std::endl;
+			std::cout << "1. Display Menu" << std::endl;
+			std::cout << "2. Display Lens Matrix" << std::endl;
+			std::cout << "3. Choose Source" << std::endl;
+			std::cout << "4. Choose Beam" << std::endl;
+			std::cout << "@Nash-Optica> ";
+			break;
+		case 2:
+			matrix();
+			menuSelection = 1;
+			break;
+		case 3:
+			std::cout << "feature not yet available" << std::endl;
+			menuSelection = 1;
+			break;
+		case 4:
+			std::cout << "feature not yet available" << std::endl;
+			menuSelection = 1;
+			break;
+		case 64:
+			std::cout << "Selection" << std::endl;
+			std::cout << "------------" << std::endl;
+			std::cout << "0. Exit" << std::endl;
+			std::cout << "1. Gaussian" << std::endl;
+			std::cout << "2. Maxwell Distribution" << std::endl;
+			std::cout << "@Nash-Optica> ";
+			break;
+		case 65:
+			std::cout << "Value: ";
+			break;
+		case 66:
+			std::cout << "Mean: ";
+			break;
+		case 67:
+			std::cout << "Standard Deviation: ";
+			break;
+		default:
+			break;
+
+		}
+		std::cin >> menuSelection;
+	} while (key == 3);
+
+	return key;
 }
 
 double gaussian(double value, double mean, double stddev)

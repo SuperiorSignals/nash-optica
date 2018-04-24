@@ -1,4 +1,6 @@
 #pragma once
+#ifndef POSITION_H_
+#define POSITION_H_
 
 template <class T>
 class Position {
@@ -42,7 +44,7 @@ Position<T>::Position(const Position &input)
 template <class T>
 Position<T>::~Position(void)
 {
-	
+
 }
 
 template <class T>
@@ -55,13 +57,13 @@ Position<T>& Position<T>::operator=(const Position &input)
 }
 
 template <class T>
-T Position<T>::getX(void) 
+T Position<T>::getX(void)
 {
 	return x;
 }
 
 template <class T>
-T Position<T>::getY(void) 
+T Position<T>::getY(void)
 {
 	return y;
 }
@@ -84,3 +86,5 @@ void Position<T>::setPosition(T abscissa, T ordinate)
 	x = abscissa;
 	y = ordinate;
 }
+
+#endif // !POSITION_H_
