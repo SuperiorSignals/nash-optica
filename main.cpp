@@ -37,10 +37,12 @@ int displayGraphics(GLfloat(&vertices)[SAMPLE_COUNT * STEP * 2 + AXIS_POINTS * S
 int displayRotatingGraphics(GLfloat(&vertices)[SAMPLE_COUNT * STEP * 2 + AXIS_POINTS * STEP], GLsizei vertexNumber);
 int displayStationaryGraphics(GLfloat(&vertices)[SAMPLE_COUNT * STEP * 2 + AXIS_POINTS * STEP], GLsizei vertexNumber);
 int displayMenu(int key);
+void generateCustomLensVertices(CustomLens input, GLfloat *vertices);
 void generateCustomLensVerticesProfile(CustomLens input, GLfloat *vertices);
 void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices);
 void generateLensVertices(SphericalLens input, GLfloat *vertices);
 void generateVertices(Sphere<GLfloat> input, GLfloat vertices[SAMPLE_COUNT * STEP], GLfloat startAngle, GLfloat endAngle);
+void makeCustomIntensityProfile(CustomLens input, std::vector<double> lensAngle, std::vector<double> intensity);
 void quickTransformVertices(GLfloat *vertices, int count);
 void quickTransformVertices(GLfloat vertices[SAMPLE_COUNT * STEP]);
 void quickTransformCustomVertices(GLfloat vertices[SAMPLE_COUNT * STEP]);
@@ -89,6 +91,11 @@ int main(int argc, char *argv[])
 			break;
 		case 4: //Display custom lens
 			exitStatus = displayCustomMenu(myCustomLens, vertices);
+			generateCustomLensVertices(myCustomLens, vertices);
+			quickTransformCustomVertices(vertices);
+			//quickTransformVertices(vertices);
+			//exitStatus = displayRotatingGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
+			exitStatus = displayGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
 			menuSelection = 1;
 			break;
 		case 5: //Display custom lens intensity
@@ -123,18 +130,40 @@ int displayCustomMenu(CustomLens &myCustomLens, GLfloat(&vertices)[SAMPLE_COUNT 
 	int exitStatus;
 	float focalLength;
 	float thickness;
+	double deviation;
+	double standard;
 
+	exitStatus = 0;
+	while (exitStatus != 1 && exitStatus != 2 && exitStatus != 3) {
+		std::cout << "Beam Profile" << std::endl;
+		std::cout << "------------" << std::endl;
+		std::cout << "1. Gaussian" << std::endl;
+		std::cout << "2. Maxwell" << std::endl;
+		std::cout << "3. Custom" << std::endl;
+		std::cout << "@Nash-Optica>Beam Profile: ";
+		std::cin >> exitStatus;
+	}
+	std::cout << "Original Gaussian STDDEV: ";
+	std::cin >> standard;
+	std::cout << "Beam STDDEV: ";
+	std::cin >> deviation;
+	switch (exitStatus) {
+	case 1:
+		myCustomLens = matrix(GAUSSIAN, standard, deviation);
+		break;
+	case 2:
+		myCustomLens = matrix(MAXWELL, standard, deviation);
+		break;
+	case 3:
+		myCustomLens = matrix(CUSTOM, standard, deviation);
+		break;
+	}
 	std::cout << "Enter focal length: ";
 	std::cin >> focalLength;
 	std::cout << "Enter thickness: ";
 	std::cin >> thickness;
-	myCustomLens = matrix();
 	myCustomLens.setFocalLength(static_cast<GLfloat>(focalLength));
 	myCustomLens.setBaseThickness(static_cast<GLfloat>(thickness));
-	generateCustomLensVerticesWire(myCustomLens, vertices);
-	quickTransformCustomVertices(vertices);
-	//quickTransformVertices(vertices);
-	exitStatus = displayRotatingGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
 
 	return exitStatus;
 }
@@ -389,6 +418,63 @@ int displayMenu(int key)
 	return menuSelection;
 }
 
+void generateCustomLensVertices(CustomLens input, GLfloat *vertices)
+{
+	int i, j;
+	int profileCount;
+	int profileNumber;
+	bool isTruncated;
+	GLfloat deltaHeight;
+	GLfloat positionX, positionY;
+	double startX, startY;
+	double endX, endY;
+	double deltaX, deltaY;
+	double angle, lensAngle;
+	double heightLimit = 0.05;
+	double widthLimit;
+	double profileAngle; // Angle to rotate profile;
+	std::vector<double> angles, lensAngles;
+	//std::ofstream outputFile;
+
+	angles = input.getAngles();
+	lensAngles = input.getLensAngles();
+
+	// Focal point is at origin (0, 0)
+	positionX = input.getFocalLength();
+	positionY = 0;
+
+	profileCount = 0;
+	profileAngle = 0;
+	profileNumber = SAMPLE_COUNT / angles.size();
+	for (i = 0; i < profileNumber; i++) {
+		startX = static_cast<double>(positionX);
+		startY = static_cast<double>(positionY);
+		for (j = 0; j < angles.size(); j++) {
+			if (1 + (tan(angles[j]) * tan(lensAngles[j])) == 0.0) {
+				if ((startX * tan(angles[j]) - startY) == 0.0) {
+					deltaY = 0.0;
+				} else {
+					std::cout << "ERROR! DIVISION BY ZERO.\n";
+				}
+			} else {
+				deltaY = (startX * tan(angles[j]) - startY) / (1 + tan(angles[j]) * tan(lensAngles[j]));
+			}
+			deltaX = deltaY * tan(lensAngles[j]);
+			endX = startX - deltaX;
+			endY = startY + deltaY;
+			vertices[(i * angles.size() + j) * STEP] = endX;
+			vertices[(i * angles.size() + j) * STEP + 1] = endY * cos(profileAngle);
+			vertices[(i * angles.size() + j) * STEP + 2] = endY * sin(profileAngle);
+			vertices[(i * angles.size() + j) * STEP + 3] = 1.0f;
+			vertices[(i * angles.size() + j) * STEP + 4] = 1.0f;
+			vertices[(i * angles.size() + j) * STEP + 5] = 1.0f;
+			startX = endX;
+			startY = endY;
+		}
+		profileAngle += 2 * PI / profileNumber;
+	}
+}
+
 void generateCustomLensVerticesProfile(CustomLens input, GLfloat *vertices)
 {
 	int i;
@@ -467,10 +553,12 @@ void generateCustomLensVerticesProfile(CustomLens input, GLfloat *vertices)
 			}
 			
 		}
+		/*
 		if (!(i % DISPLAY_NUMBER)) {
 			std::cout << "Actual: " << endX << " " << endY << " ";
 			std::cout << "Display: " << vertices[i * STEP] << " " << vertices[i * STEP + 1] << std::endl;
 		}
+		*/
 		startX = endX;
 		startY = endY;
 	}
@@ -570,7 +658,7 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 							vertices[i * STEP + 5] = 1.0f;
 						}
 						else {
-							std::cout << i << " ";
+							//std::cout << i << " ";
 							vertices[i * STEP] = vertices[(i - 1) * STEP];
 							vertices[i * STEP + 1] = vertices[(i - 1) * STEP + 1];
 							vertices[i * STEP + 2] = vertices[(i - 1) * STEP + 2];
@@ -654,8 +742,7 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 			outputFile << vertices[i * STEP] << "\t\t" << vertices[i * STEP + 1];
 			outputFile << "\t\t" << vertices[i * STEP + 2] << std::endl;
 		}
-	}
-	else {
+	} else {
 		std::cout << "ERROR: Unable to open file optics_output_2.txt" << std::endl;
 	}
 	outputFile.close();
@@ -765,6 +852,10 @@ void generateVertices(Sphere<GLfloat> input, GLfloat vertices[SAMPLE_COUNT * STE
 	}
 }
 
+void makeCustomIntensityProfile(CustomLens input, std::vector<double> lensAngle, std::vector<double> intensity)
+{
+
+}
 
 void quickTransformVertices(GLfloat *vertices, int count)
 {
@@ -872,21 +963,46 @@ void quickTransformCustomVertices(GLfloat vertices[SAMPLE_COUNT * STEP])
 	GLfloat horizontalShift;
 	GLfloat verticalScale;
 	GLfloat verticalShift;
-	GLfloat depthScale;
 	GLfloat aspectRatio;
+	GLfloat horizontalMaximum;
+	GLfloat verticalMaximum;
+	int hozMax = 0;
+	int verMax = 0;
 
 	//horizontalScale = static_cast<GLfloat>(HEIGHT) / static_cast<GLfloat>(WIDTH);
 	aspectRatio = static_cast<GLfloat>(HEIGHT) / static_cast<GLfloat>(WIDTH);
+
+	horizontalMaximum = abs(vertices[0]);
+	verticalMaximum = abs(vertices[1]);
+	for (i = 0; i < SAMPLE_COUNT; i++) {
+		if (horizontalMaximum < abs(vertices[i * STEP])) {
+			horizontalMaximum = abs(vertices[i * STEP]);
+			hozMax = i;
+		}
+		if (verticalMaximum < abs(vertices[i * STEP + 1])) {
+			verticalMaximum = abs(vertices[i* STEP + 1]);
+			verMax = i;
+		}
+	}
+	if (verticalMaximum > 0) {
+		verticalScale = 1 / verticalMaximum;
+	}
+	if (horizontalMaximum > 0) {
+		horizontalScale = 1 / horizontalMaximum;
+	}
+	
 	horizontalScale = 10.0 * aspectRatio;
 	horizontalShift = 0.01;
 	verticalScale = 10;
 	verticalShift = 0.0;
-	depthScale = 10.0 * aspectRatio;	
 
+	std::cout << "Vertical scale: " << verticalScale << std::endl;
+	std::cout << "Horizontal scale: " << horizontalScale << std::endl;
+	
 	for (i = 0; i < SAMPLE_COUNT + AXIS_POINTS; i++) {
 		vertices[i * STEP] = (vertices[i * STEP] - horizontalShift) * horizontalScale;
 		vertices[i * STEP + 1] = (vertices[i * STEP + 1] - verticalShift) * verticalScale;
-		vertices[i * STEP + 2] = vertices[i * STEP + 2] * depthScale;
+		vertices[i * STEP + 2] = vertices[i * STEP + 2] * verticalScale * aspectRatio;
 		//vertices[i * STEP + 3] = 1.0f;
 		//vertices[i * STEP + 4] = 1.0f;
 		//vertices[i * STEP + 5] = 1.0f;

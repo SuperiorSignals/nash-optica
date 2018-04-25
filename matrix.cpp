@@ -7,7 +7,7 @@
 #include <cstdlib>
 #include "customlens.h"
 
-CustomLens matrix()
+CustomLens matrix(Distribution type, double firstParameter, double secondParameter)
 {
 	int i;
 	int menuSelection;
@@ -29,13 +29,35 @@ CustomLens matrix()
 		return 1;
 	}
 	*/
-	for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
-		temporary = PI * static_cast<double>(i) / (SAMPLE_NUMBER);
-		angle.push_back(temporary);
-		sourceIntensity.push_back(gaussian(temporary, 0, 0.5));
-		specifiedIntensity.push_back(gaussian(temporary, 0, 0.7));
-		//specifiedIntensity.push_back(maxwell(temporary, 0.5));
+	switch (type) {
+	case GAUSSIAN:
+		for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
+			temporary = PI * static_cast<double>(i) / (SAMPLE_NUMBER);
+			angle.push_back(temporary);
+			sourceIntensity.push_back(gaussian(temporary, 0, firstParameter));
+			specifiedIntensity.push_back(gaussian(temporary, 0, secondParameter));
+			//specifiedIntensity.push_back(maxwell(temporary, 0.5));
+		}
+		break;
+	case MAXWELL:
+		for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
+			temporary = PI * static_cast<double>(i) / (SAMPLE_NUMBER);
+			angle.push_back(temporary);
+			sourceIntensity.push_back(gaussian(temporary, 0, firstParameter));
+			specifiedIntensity.push_back(maxwell(temporary, secondParameter));
+		}
+		break;
+	case CUSTOM:
+	default:
+		for (i = 0; i < SAMPLE_NUMBER / 2; i++) {
+			temporary = PI * static_cast<double>(i) / (SAMPLE_NUMBER);
+			angle.push_back(temporary);
+			sourceIntensity.push_back(gaussian(temporary, 0, 0.5));
+			specifiedIntensity.push_back(gaussian(temporary, 0, 0.7));
+		}
+		break;
 	}
+
 	//generateIntermediateAngle(angle, sourceIntensity, lensAngle, specifiedIntensity);
 	histogramSpecification(lensAngle, sourceIntensity, specifiedIntensity);
 	std::cout << std::fixed << std::setprecision(5);
@@ -92,7 +114,7 @@ int matrixMenu(int key) {
 			std::cout << "@Nash-Optica> ";
 			break;
 		case 2:
-			matrix();
+			matrix(CUSTOM, 0.5, 0.75);
 			menuSelection = 1;
 			break;
 		case 3:

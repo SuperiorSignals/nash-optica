@@ -6,7 +6,9 @@
 #define DISPLAY_NUMBER 32
 #define PI 3.14159265359
 
-CustomLens matrix();
+enum Distribution {GAUSSIAN, MAXWELL, CUSTOM};
+
+CustomLens matrix(Distribution type, double firstParameter, double secondParameter);
 int matrixMenu(int key);
 double gaussian(double value, double mean, double stddev);
 double maxwell(double value, double alpha);
