@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
 			quickTransformCustomVertices(vertices);
 			//quickTransformVertices(vertices);
 			//exitStatus = displayRotatingGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
-			exitStatus = displayGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
+			exitStatus = displayRotatingGraphics(vertices, static_cast<GLsizei>(SAMPLE_COUNT));
 			menuSelection = 1;
 			break;
 		case 5: //Display custom lens intensity
@@ -430,11 +430,11 @@ void generateCustomLensVertices(CustomLens input, GLfloat *vertices)
 	double endX, endY;
 	double deltaX, deltaY;
 	double angle, lensAngle;
-	double heightLimit = 0.05;
+	double heightLimit;
 	double widthLimit;
 	double profileAngle; // Angle to rotate profile;
 	std::vector<double> angles, lensAngles;
-	//std::ofstream outputFile;
+	std::ofstream outputFile;
 
 	angles = input.getAngles();
 	lensAngles = input.getLensAngles();
@@ -443,10 +443,13 @@ void generateCustomLensVertices(CustomLens input, GLfloat *vertices)
 	positionX = input.getFocalLength();
 	positionY = 0;
 
+	widthLimit = input.getBaseThickness() + input.getFocalLength();
 	profileCount = 0;
 	profileAngle = 0;
 	profileNumber = SAMPLE_COUNT / angles.size();
+	std::cout << "Profile Number: " << profileNumber << std::endl;
 	for (i = 0; i < profileNumber; i++) {
+		isTruncated = false;
 		startX = static_cast<double>(positionX);
 		startY = static_cast<double>(positionY);
 		for (j = 0; j < angles.size(); j++) {
@@ -462,17 +465,38 @@ void generateCustomLensVertices(CustomLens input, GLfloat *vertices)
 			deltaX = deltaY * tan(lensAngles[j]);
 			endX = startX - deltaX;
 			endY = startY + deltaY;
-			vertices[(i * angles.size() + j) * STEP] = endX;
-			vertices[(i * angles.size() + j) * STEP + 1] = endY * cos(profileAngle);
-			vertices[(i * angles.size() + j) * STEP + 2] = endY * sin(profileAngle);
-			vertices[(i * angles.size() + j) * STEP + 3] = 1.0f;
-			vertices[(i * angles.size() + j) * STEP + 4] = 1.0f;
-			vertices[(i * angles.size() + j) * STEP + 5] = 1.0f;
+			if (endX < widthLimit && isTruncated == false) {
+				vertices[(i * angles.size() + j) * STEP] = endX;
+				vertices[(i * angles.size() + j) * STEP + 1] = endY * cos(profileAngle);
+				vertices[(i * angles.size() + j) * STEP + 2] = endY * sin(profileAngle);
+				vertices[(i * angles.size() + j) * STEP + 3] = 1.0f;
+				vertices[(i * angles.size() + j) * STEP + 4] = 1.0f;
+				vertices[(i * angles.size() + j) * STEP + 5] = 1.0f;
+			} else {
+				isTruncated = true;
+				vertices[(i * angles.size() + j) * STEP] = vertices[(i * angles.size() + j - 1) * STEP];
+				vertices[(i * angles.size() + j) * STEP + 1] = vertices[(i * angles.size() + j - 1) * STEP + 1];
+				vertices[(i * angles.size() + j) * STEP + 2] = vertices[(i * angles.size() + j - 1) * STEP + 2];
+				vertices[(i * angles.size() + j) * STEP + 3] = 1.0f;
+				vertices[(i * angles.size() + j) * STEP + 4] = 1.0f;
+				vertices[(i * angles.size() + j) * STEP + 5] = 1.0f;
+			}
 			startX = endX;
 			startY = endY;
 		}
 		profileAngle += 2 * PI / profileNumber;
 	}
+
+	outputFile.open("optics_output_2.txt", std::ios::out | std::ios::trunc);
+	if (outputFile.is_open()) {
+		outputFile << std::fixed << std::setprecision(5);
+		for (i = 0; i < SAMPLE_COUNT; i++) {
+			outputFile << vertices[i * STEP] << "\t\t" << vertices[i * STEP + 1] << std::endl;
+		}
+	} else {
+		std::cout << "ERROR: Unable to open file optics_output_2.txt" << std::endl;
+	}
+	outputFile.close();
 }
 
 void generateCustomLensVerticesProfile(CustomLens input, GLfloat *vertices)
@@ -972,6 +996,9 @@ void quickTransformCustomVertices(GLfloat vertices[SAMPLE_COUNT * STEP])
 	//horizontalScale = static_cast<GLfloat>(HEIGHT) / static_cast<GLfloat>(WIDTH);
 	aspectRatio = static_cast<GLfloat>(HEIGHT) / static_cast<GLfloat>(WIDTH);
 
+	horizontalShift = 0;
+	verticalShift = 0;
+
 	horizontalMaximum = abs(vertices[0]);
 	verticalMaximum = abs(vertices[1]);
 	for (i = 0; i < SAMPLE_COUNT; i++) {
@@ -991,10 +1018,17 @@ void quickTransformCustomVertices(GLfloat vertices[SAMPLE_COUNT * STEP])
 		horizontalScale = 1 / horizontalMaximum;
 	}
 	
-	horizontalScale = 10.0 * aspectRatio;
-	horizontalShift = 0.01;
-	verticalScale = 10;
-	verticalShift = 0.0;
+	//horizontalScale = 10.0 * aspectRatio;
+	//horizontalShift = 0.01;
+	//verticalScale = 10;
+	//verticalShift = 0.0;
+
+	if (horizontalScale > verticalScale) {
+		horizontalScale = verticalScale;
+	} else {
+		verticalScale = horizontalScale;
+	}
+	horizontalScale *= aspectRatio;
 
 	std::cout << "Vertical scale: " << verticalScale << std::endl;
 	std::cout << "Horizontal scale: " << horizontalScale << std::endl;
