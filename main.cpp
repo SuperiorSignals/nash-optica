@@ -40,6 +40,7 @@ int displayMenu(int key);
 void generateCustomLensVertices(CustomLens input, GLfloat *vertices);
 void generateCustomLensVerticesProfile(CustomLens input, GLfloat *vertices);
 void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices);
+void generateLensMesh(SphericalLens input, GLfloat *vertices);
 void generateLensVertices(SphericalLens input, GLfloat *vertices);
 void generateVertices(Sphere<GLfloat> input, GLfloat vertices[SAMPLE_COUNT * STEP], GLfloat startAngle, GLfloat endAngle);
 void makeCustomIntensityProfile(CustomLens input, std::vector<double> lensAngle, std::vector<double> intensity);
@@ -484,6 +485,8 @@ void generateCustomLensVertices(CustomLens input, GLfloat *vertices)
 			startX = endX;
 			startY = endY;
 		}
+		vertices[(i * angles.size() + angles.size() - 1) * STEP + 1] = 0;
+		vertices[(i * angles.size() + angles.size() - 1) * STEP + 2] = 0;
 		profileAngle += 2 * PI / profileNumber;
 	}
 
@@ -655,7 +658,6 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 		isTruncated = false;
 		widthLimit = static_cast<double>(input.getFocalLength() + input.getBaseThickness());
 		for (i = profileCount, j = 0; j < angles.size(); i++, j++) {
-			//std::cout << "Position: " << startX << " " << startY << " ";
 			if (1 + (tan(angles[j]) * tan(lensAngles[j])) == 0.0) {
 				if ((startX * tan(angles[j]) - startY) == 0.0) {
 					deltaY = 0.0;
@@ -682,7 +684,6 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 							vertices[i * STEP + 5] = 1.0f;
 						}
 						else {
-							//std::cout << i << " ";
 							vertices[i * STEP] = vertices[(i - 1) * STEP];
 							vertices[i * STEP + 1] = vertices[(i - 1) * STEP + 1];
 							vertices[i * STEP + 2] = vertices[(i - 1) * STEP + 2];
@@ -770,6 +771,11 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 		std::cout << "ERROR: Unable to open file optics_output_2.txt" << std::endl;
 	}
 	outputFile.close();
+}
+
+void generateLensMesh(SphericalLens input, GLfloat *vertices)
+{
+
 }
 
 void generateLensVertices(SphericalLens input, GLfloat *vertices)
