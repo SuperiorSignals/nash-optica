@@ -1,9 +1,12 @@
 #pragma once
 #include "lens.h"
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <qopengl.h>
 #include <vector>
 #include "position.h"
 #include "sphere.h"
+
+
 
 //std::vector<Position<GLfloat>> lensProfile(GLfloat angle, int numberOfPoints);
 

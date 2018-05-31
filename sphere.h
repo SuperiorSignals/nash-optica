@@ -3,7 +3,8 @@
 #define SPHERE_H_
 
 #include "position.h"
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <qopengl.h>
 #include <vector>
 
 template <class T>

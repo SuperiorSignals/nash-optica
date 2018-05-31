@@ -1,7 +1,9 @@
 #pragma once
 #ifndef LENS_H_
 #define LENS_H_
-#include <Gl/glew.h>
+
+//#include <gl/glew.h>
+#include <qopengl.h>
 
 class Lens {
 public:

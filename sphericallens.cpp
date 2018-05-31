@@ -1,7 +1,8 @@
 #include "sphericallens.h"
 #include <cmath>
-#include <GL/glew.h>
-#include <iostream>
+//#include <GL/glew.h>
+#include <qopengl.h>
+//#include <iostream>
 #include <vector>
 
 #define PI 3.14159265359
@@ -220,20 +221,13 @@ std::vector<Position<GLfloat>> lensProfile(SphericalLens input, int numberOfPoin
 	std::vector<Position<GLfloat>> temporary;
 	int length;
 
-	std::cout << "Front intersection angle: " << input.getFrontIntersectionAngle() << std::endl;
-	std::cout << "Back intersection angle: " << input.getBackIntersectionAngle() << std::endl;
+    //std::cout << "Front intersection angle: " << input.getFrontIntersectionAngle() << std::endl;
+    //std::cout << "Back intersection angle: " << input.getBackIntersectionAngle() << std::endl;
 	output = sphereArc(input.getFront(), - PI, - PI + input.getFrontIntersectionAngle(), numberOfPoints / 2);
 	temporary = sphereArc(input.getBack(), input.getBackIntersectionAngle(), 0, numberOfPoints / 2);
 	for (int i = 0; i < temporary.size(); i++) {
 		output.push_back(temporary[i]);
 	}
-	/*
-	temporary = sphereArc(input.getBack(), 0, input.getBackIntersectionAngle(), numberOfPoints / 2);
-	length = temporary.size();
-	for (int i = 0; i < length; i++) {
-		output.push_back(temporary[length - (i + 1)]);
-	}
-	*/
 
 	return output;
 }

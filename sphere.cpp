@@ -1,6 +1,7 @@
 #include "sphere.h"
 #include <cmath>
-#include <GL/glew.h>
+//#include <GL/glew.h>
+#include <qopengl.h>
 #include <vector>
 #include "position.h"
 
