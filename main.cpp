@@ -19,6 +19,7 @@ Author: Stewart Nash
 #include "shader.h"
 #include "sphere.h"
 #include "sphericallens.h"
+#include "test_functions.h"
 
 #define PI 3.14159265359
 #define SAMPLE_COUNT 10240
@@ -63,13 +64,8 @@ int main(int argc, char *argv[])
 	//0.0f,  0.5f, 0.0f,   0.0f, 0.0f, 1.0f   // Top
 	//};
 	GLfloat vertices[SAMPLE_COUNT * STEP * 2 + AXIS_POINTS * STEP];
-	//Sphere<GLfloat> mySphere;
-	//mySphere.setRadius(0.10);
-	//mySphere.center.setX(0.25);
-	//mySphere.center.setY(0.5);
-	//generateVertices(mySphere, vertices, 0, 2 * PI);
-	//quickTransformVertices(vertices);
-	
+
+	test_function_1();
 	menuSelection = 1;
 	while (menuSelection != 0) {
 		switch (menuSelection) {
@@ -758,7 +754,6 @@ void generateCustomLensVerticesWire(CustomLens input, GLfloat *vertices)
 	}
 
 	// Check that there are more than three samples?
-
 
 	outputFile.open("optics_output_2.txt", std::ios::out | std::ios::trunc);
 	if (outputFile.is_open()) {
